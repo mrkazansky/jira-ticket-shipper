@@ -6,8 +6,17 @@ module Fastlane
   module Actions
     class JiraTicketShipperAction < Action
       def self.run(params)
-        UI.message("The jira_ticket_shipper plugin is working!")
-        tickets = params[:ticket_message].scan(/\w*KLIV-\w*/).uniq
+        content = []
+        params[:comment].strip.split(/\[(.*?)\]/).each { |message|
+          if message.match(/\| (https:|http:|www\.)\S*/) 
+            attrs = message.split('|')
+            content << {text: attrs[0].strip, type: "text", marks: [{type: "link", attrs: {href: attrs[1].strip, title: message}}] }            
+          else 
+            content << {text: message, type: "text"}
+          end
+        }
+
+        tickets = params[:ticket_message].scan(/\w*KLIV-\w*/).uniq              
         tickets.each { |ticket|
           uri = URI("#{params[:base_url]}/rest/api/3/issue/#{ticket}/transitions")
           req = Net::HTTP::Post.new(uri)
@@ -22,11 +31,11 @@ module Fastlane
           req = Net::HTTP::Post.new(uri)
           req['Content-Type'] = "application/json"
           req['Authorization'] = "Basic #{params[:token]}"          
-          req.body = {body: { type: "doc", version: 1, content: [{type: "paragraph", content: [{text: "#{params[:comment]}", type: "text"}] }]}}.to_json
-          Net::HTTP.start(uri.hostname, uri.port, :use_ssl => true) do |http|
+          req.body = {body: { type: "doc", version: 1, content: [type: "paragraph", content: content] }}.to_json
+          res = Net::HTTP.start(uri.hostname, uri.port, :use_ssl => true) do |http|
             http.request(req)        
           end 
-        }    
+       }    
         
       end
 
@@ -91,7 +100,7 @@ module Fastlane
             end),
           FastlaneCore::ConfigItem.new(key: :comment,
             env_name: 'COMMENT',
-            description: 'What ever you want to comment',
+            description: 'What ever you want to comment, inclued url. Format: Comment [URL | http://www.gg.zzz',
             optional: false,
             type: String,
             verify_block: proc do |value|

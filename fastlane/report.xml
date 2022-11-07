@@ -5,7 +5,7 @@
     
     
       
-      <testcase classname="fastlane.lanes" name="0: jira_ticket_shipper" time="0.000166">
+      <testcase classname="fastlane.lanes" name="0: jira_ticket_shipper" time="2.115222">
         
       </testcase>
     
