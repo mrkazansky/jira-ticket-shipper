@@ -16,7 +16,7 @@ module Fastlane
           end
         }
 
-        tickets = params[:ticket_message].scan(/\w*KLIV-\w*/).uniq              
+        tickets = params[:ticket_message].scan(/\w*#{params[:ticket_patern]}\w*/).uniq              
         tickets.each { |ticket|
           uri = URI("#{params[:base_url]}/rest/api/3/issue/#{ticket}/transitions")
           req = Net::HTTP::Post.new(uri)
